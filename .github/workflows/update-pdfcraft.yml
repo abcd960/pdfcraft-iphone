@@ -1,0 +1,49 @@
+
+name: Auto Update PdfCraft
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  update-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download latest PdfCraft release
+        run: |
+          URL=$(curl -fsSL \
+            https://api.github.com/repos/storytold/pdfcraft/releases/latest \
+            | jq -r '.assets[] | select(.name | startswith("pdfcraft-web-") and endswith(".zip")) | .browser_download_url' \
+            | head -n 1)
+
+          if [ -z "$URL" ]; then
+            echo "PdfCraft web ZIP not found"
+            exit 1
+          fi
+
+          mkdir site
+          curl -fL "$URL" -o pdfcraft.zip
+          unzip -q pdfcraft.zip -d site
+
+          test -f site/index.html
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload website
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: site
+
+      - name: Deploy website
+        uses: actions/deploy-pages@v4
