@@ -36,9 +36,9 @@ jobs:
           fi
 
           curl -fL "$URL" -o pdfcraft.zip
-          mkdir site
-          unzip -q pdfcraft.zip -d site
-          test -f site/index.html
+          mkdir -p "$RUNNER_TEMP/pdfcraft-site"
+          unzip -q pdfcraft.zip -d "$RUNNER_TEMP/pdfcraft-site"
+          test -f "$RUNNER_TEMP/pdfcraft-site/index.html"
 
       - name: Update repository files
         run: |
@@ -46,7 +46,7 @@ jobs:
             ! -name '.git' ! -name '.github' \
             -exec rm -rf {} +
 
-          cp -a site/. .
+          cp -a "$RUNNER_TEMP/pdfcraft-site/." .
           git add -A
 
           if ! git diff --cached --quiet; then
