@@ -36,9 +36,20 @@ jobs:
           fi
 
           curl -fL "$URL" -o pdfcraft.zip
+
+          mkdir -p "$RUNNER_TEMP/pdfcraft-extracted"
+          unzip -q pdfcraft.zip -d "$RUNNER_TEMP/pdfcraft-extracted"
+
+          INDEX=$(find "$RUNNER_TEMP/pdfcraft-extracted" -type f -name index.html | head -n 1)
+
+          if [ -z "$INDEX" ]; then
+            echo "index.html not found in ZIP"
+            find "$RUNNER_TEMP/pdfcraft-extracted" -maxdepth 3 -type f
+            exit 1
+          fi
+
           mkdir -p "$RUNNER_TEMP/pdfcraft-site"
-          unzip -q pdfcraft.zip -d "$RUNNER_TEMP/pdfcraft-site"
-          test -f "$RUNNER_TEMP/pdfcraft-site/index.html"
+          cp -a "$(dirname "$INDEX")/." "$RUNNER_TEMP/pdfcraft-site/"
 
       - name: Update repository files
         run: |
